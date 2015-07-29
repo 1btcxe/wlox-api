@@ -245,10 +245,11 @@ class Orders {
 		if ($CFG->memcached && !$absolute) {
 			$cached = $CFG->m->get('bid_ask_'.$currency_info['currency']);
 			if ($cached) {
+				$CFG->bid_ask[$currency_info['currency']] = $cached;
 				return $cached;
 			}
 		}
-		
+
 		if ($CFG->cross_currency_trades) {
 			$price_str_bid = '(orders.btc_price * CASE orders.currency WHEN '.$currency_info['id'].' THEN 1';
 			$price_str_ask = '(orders.btc_price * CASE orders.currency WHEN '.$currency_info['id'].' THEN 1';
@@ -1198,15 +1199,15 @@ class Orders {
 		
 		if (array_key_exists('orders',$unset)) {
 			$delete_keys = array();
-			$CFG->m->set('lock',true,2);
+			$CFG->m->set('lock',true,1);
 			$cached = $CFG->m->get('cache_log');
+			$delete_keys[] = 'cache_log';
 			
 			if ($cached) {
-				$delete_keys[] = 'cache_log';
 				$delete_keys[] = 'lock';
 				$delete_keys = array_merge($delete_keys,explode('|',$cached));
-				$CFG->m->deleteMulti($delete_keys);
 			}
+			$CFG->m->deleteMulti($delete_keys);
 		}
 		
 		if (array_key_exists('balances',$unset)) {
